@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   movie_service:
-    build: ./movie-service
+    image: 865w8z11/movie-service:dev-latest
     volumes:
       - ./movie-service/:/app/
     ports:
@@ -23,7 +23,7 @@ services:
       - POSTGRES_DB=movie_db_dev
 
   cast_service:
-    build: ./cast-service
+    image: 865w8z11/cast-service:dev-latest
     volumes:
       - ./cast-service/:/app/
     ports:

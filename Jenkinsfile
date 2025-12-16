@@ -16,7 +16,7 @@ pipeline {
                     def gitBranch = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
                     env.GIT_BRANCH = gitBranch
 
-                    if (gitBranch == 'origin/master') {
+                    if (env.GIT_BRANCH == 'origin/master') {
                         env.IMAGE_TAG = 'latest'
                         env.NAMESPACE = 'staging'
                         env.INGRESS_HOST = 'datascientest-staging.debauchez.fr'
