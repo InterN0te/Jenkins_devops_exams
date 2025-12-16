@@ -65,18 +65,6 @@ pipeline {
             }
         }
 
-        stage('Prepare Helm Chart') {
-            steps {
-                script {
-                    sh '''
-                        cp -r charts charts-temp
-                        sed -i '/containers:/a\\          {{- if .Values.secretName }}\\n          envFrom:\\n            - secretRef:\\n                name: {{ .Values.secretName }}\\n          {{- end }}\\n          {{- if .Values.env }}\\n          env:' charts-temp/templates/deployment.yaml
-                        sed -i '/env:/a\\            {{- range $key, $value := .Values.env }}\\n            - name: {{ $key }}\\n              value: {{ $value | quote }}\\n            {{- end }}\\n          {{- end }}' charts-temp/templates/deployment.yaml
-                    '''
-                }
-            }
-        }
-
         stage('Deploy to Initial Namespace') {
             steps {
                 script {
@@ -84,7 +72,7 @@ pipeline {
                         sh """
                             kubectl create namespace ${env.NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
 
-                            helm upgrade --install cast-service ./charts-temp \\
+                            helm upgrade --install cast-service ./charts \\
                                 --namespace ${env.NAMESPACE} \\
                                 --set image.repository=${CAST_SERVICE_IMAGE} \\
                                 --set image.tag=${IMAGE_TAG} \\
@@ -99,7 +87,7 @@ pipeline {
                                 --set service.targetPort=8000 \\
                                 --set fullnameOverride=cast-service
 
-                            helm upgrade --install movie-service ./charts-temp \\
+                            helm upgrade --install movie-service ./charts \\
                                 --namespace ${env.NAMESPACE} \\
                                 --set image.repository=${MOVIE_SERVICE_IMAGE} \\
                                 --set image.tag=${IMAGE_TAG} \\
@@ -141,7 +129,7 @@ pipeline {
                         sh """
                             kubectl create namespace ${env.PROD_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
 
-                            helm upgrade --install cast-service ./charts-temp \\
+                            helm upgrade --install cast-service ./charts \\
                                 --namespace ${env.PROD_NAMESPACE} \\
                                 --set image.repository=${CAST_SERVICE_IMAGE} \\
                                 --set image.tag=${IMAGE_TAG} \\
@@ -156,7 +144,7 @@ pipeline {
                                 --set service.targetPort=8000 \\
                                 --set fullnameOverride=cast-service
 
-                            helm upgrade --install movie-service ./charts-temp \\
+                            helm upgrade --install movie-service ./charts \\
                                 --namespace ${env.PROD_NAMESPACE} \\
                                 --set image.repository=${MOVIE_SERVICE_IMAGE} \\
                                 --set image.tag=${IMAGE_TAG} \\
@@ -202,7 +190,7 @@ pipeline {
                         sh """
                             kubectl create namespace ${env.QA_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
 
-                            helm upgrade --install cast-service ./charts-temp \\
+                            helm upgrade --install cast-service ./charts \\
                                 --namespace ${env.QA_NAMESPACE} \\
                                 --set image.repository=${CAST_SERVICE_IMAGE} \\
                                 --set image.tag=${IMAGE_TAG} \\
@@ -217,7 +205,7 @@ pipeline {
                                 --set service.targetPort=8000 \\
                                 --set fullnameOverride=cast-service
 
-                            helm upgrade --install movie-service ./charts-temp \\
+                            helm upgrade --install movie-service ./charts \\
                                 --namespace ${env.QA_NAMESPACE} \\
                                 --set image.repository=${MOVIE_SERVICE_IMAGE} \\
                                 --set image.tag=${IMAGE_TAG} \\
@@ -243,7 +231,6 @@ pipeline {
         always {
             script {
                 sh 'docker logout || true'
-                sh 'rm -rf charts-temp || true'
             }
         }
         success {
