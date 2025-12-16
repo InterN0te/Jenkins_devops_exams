@@ -12,7 +12,11 @@ pipeline {
         stage('Determine Tag and Namespace') {
             steps {
                 script {
-                    if (env.BRANCH_NAME == 'master') {
+                    // Detect current branch using git command
+                    def gitBranch = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                    env.GIT_BRANCH = gitBranch
+
+                    if (gitBranch == 'master') {
                         env.IMAGE_TAG = 'latest'
                         env.NAMESPACE = 'staging'
                         env.INGRESS_HOST = 'datascientest-staging.debauchez.fr'
@@ -25,7 +29,7 @@ pipeline {
                         env.QA_NAMESPACE = 'qa'
                         env.QA_INGRESS_HOST = 'datascientest-qa.debauchez.fr'
                     }
-                    echo "Branch: ${env.BRANCH_NAME}"
+                    echo "Branch: ${env.GIT_BRANCH}"
                     echo "Image Tag: ${env.IMAGE_TAG}"
                     echo "Initial Namespace: ${env.NAMESPACE}"
                     echo "Ingress Host: ${env.INGRESS_HOST}"
@@ -110,7 +114,7 @@ pipeline {
 
         stage('Manual Approval for Production') {
             when {
-                branch 'master'
+                expression { env.GIT_BRANCH == 'master' }
             }
             steps {
                 script {
@@ -121,7 +125,7 @@ pipeline {
 
         stage('Deploy to Production') {
             when {
-                branch 'master'
+                expression { env.GIT_BRANCH == 'master' }
             }
             steps {
                 script {
@@ -167,9 +171,7 @@ pipeline {
 
         stage('Manual Approval for QA') {
             when {
-                not {
-                    branch 'master'
-                }
+                expression { env.GIT_BRANCH != 'master' }
             }
             steps {
                 script {
@@ -180,9 +182,7 @@ pipeline {
 
         stage('Deploy to QA') {
             when {
-                not {
-                    branch 'master'
-                }
+                expression { env.GIT_BRANCH != 'master' }
             }
             steps {
                 script {
