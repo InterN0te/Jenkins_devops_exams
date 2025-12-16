@@ -16,7 +16,7 @@ pipeline {
                     def gitBranch = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
                     env.GIT_BRANCH = gitBranch
 
-                    if (gitBranch == 'master') {
+                    if (gitBranch == 'origin/master') {
                         env.IMAGE_TAG = 'latest'
                         env.NAMESPACE = 'staging'
                         env.INGRESS_HOST = 'datascientest-staging.debauchez.fr'
@@ -114,7 +114,7 @@ pipeline {
 
         stage('Manual Approval for Production') {
             when {
-                expression { env.GIT_BRANCH == 'master' }
+                expression { env.GIT_BRANCH == 'origin/master' }
             }
             steps {
                 script {
@@ -125,7 +125,7 @@ pipeline {
 
         stage('Deploy to Production') {
             when {
-                expression { env.GIT_BRANCH == 'master' }
+                expression { env.GIT_BRANCH == 'origin/master' }
             }
             steps {
                 script {
@@ -171,7 +171,7 @@ pipeline {
 
         stage('Manual Approval for QA') {
             when {
-                expression { env.GIT_BRANCH != 'master' }
+                expression { env.GIT_BRANCH != 'origin/master' }
             }
             steps {
                 script {
@@ -182,7 +182,7 @@ pipeline {
 
         stage('Deploy to QA') {
             when {
-                expression { env.GIT_BRANCH != 'master' }
+                expression { env.GIT_BRANCH != 'origin/master' }
             }
             steps {
                 script {
